@@ -1,0 +1,246 @@
+<html>
+<head>
+	<title>
+		Robots: The Game
+	</title>
+	<style type="text/css">
+	robots{
+		border: 1px solid black
+	}
+	user{
+		border: 1px solid black;
+	}
+	</style>
+	<script type="text/javascript">
+	var songs = ['muffet_theme.mp3', 'Asriel_theme.mp3', 'Undyne_theme.mp3', 'papyrus_theme.mp3', 'toriel_theme.mp3', 'background_score.mp3', 'Asgore_theme.mp3','mettaton_theme.mp3','NEO_theme.mp3','Sans_theme.mp3','Undying_theme.mp3','Sans2_theme.mp3', 'snowdin.mp3', 'Amalgam_theme.mp3', 'Goodbye.mp3', 'Napstablook_theme.mp3', 'Dummy_theme.mp3', 'Tem_theme.mp3', 'Waterfall.mp3'];
+	var user_points = 0;
+	var user_level = 1;
+	var pixelw = 1000;
+	var pixelh = 590;
+	var fontSize = 30;
+	var total_robots = 4;
+	var robots = [];
+	var user = null;
+	var draw = null;
+	var teleportCount = 5;
+	var robotsLeft = total_robots;
+
+	function endGame(){
+		draw.fillStyle = "white";
+		draw.clearRect(0,0,pixelw,pixelh);
+	}
+	function instructions(){
+		alert("You are an @ sign. You are trying to run away from the robots who are +. You want to run robots into each other to create a junk heap which is noted by a #. You are allowed to touch a junk heap but you cannot move past it(can be used strategically. BE CAREFUL. IF YOU TOUCH A ROBOT, THE GAME ENDS.")
+		alert("Use your arrow keys to move the player. If caught in a pickle, the letter t can be used to teleport to a random place on the screen.")
+	}
+
+	function songPick(){
+		anoying.src = songs[Math.floor(Math.random() * songs.length)];
+	}
+ 
+	function initialize(){
+	var t = document.getElementById("robot");
+	user = {x: Math.floor((Math.random() * pixelw) + 1), y: Math.floor((Math.random() * pixelh) + 1)};
+
+	//user = {x: 503, y: 2};
+
+	draw = t.getContext("2d");
+	draw.font = fontSize+"px Arial";
+	for (i = 0; i<total_robots; i++){
+		var arobot = {x: Math.floor((Math.random() * pixelw) + 1), y: Math.floor((Math.random() * pixelh) + 1), state: "alive"};
+		robots.push(arobot);
+	}
+	drawScreen();
+}
+	function muteNoise(){
+		if (anoying.muted){
+			anoying.muted = false;
+			muter.innerHTML = "Click to mute";
+		} else{
+			anoying.muted = true;
+			muter.innerHTML = "Click to unmute";
+		}
+
+	}
+	function drawScreen(){
+		draw.fillStyle = "white";
+		draw.fillRect(0,0,pixelw,pixelh);
+		draw.fillStyle = "black";
+		document.getElementById("dbg").innerText = "Point Value is: " + user_points;
+		document.getElementById("tele").innerText = "Teleports left: " + teleportCount;
+		document.getElementById("debug").innerText = "Your level: " + user_level;
+		draw.fillText("@",user.x,user.y);
+		for (k=0; k<robots.length; k++){
+			if (robots[k].state == "alive"){
+				draw.fillStyle = "red";
+				draw.fillText("+",robots[k].x,robots[k].y);
+			}
+			else if (robots[k].state == "junk"){
+				draw.fillStyle = "green";
+				draw.fillText("#",robots[k].x,robots[k].y);
+			}
+		}
+	}
+
+	function doOverlap(tlx,brx,tl2x,br2x,tly,bry,tl2y,br2y){
+		if (tlx > br2x || tl2x > brx){
+        	return false;
+ 		} 
+ 		if (tly > br2y || tl2y > bry){
+        	return false;
+ 		}	
+ 		return true;
+	}
+	function teleport(){
+		user.x = Math.floor((Math.random() * pixelw));
+		user.y = Math.floor((Math.random() * pixelw)/2);
+		teleportCount -= 1;
+		drawScreen();
+	}
+	function gameEnd(){
+		if (robotsLeft == 0){
+			drawScreen();
+			total_robots = total_robots+4;
+			robotsLeft = total_robots;
+			user_level+=1;
+			teleportCount+=2;
+			initialize();
+			alert("Are you ready for "+debug.innerText)
+		}
+	}
+
+	function checkRobots(){
+		for (f=0; f<robots.length; f+=1){
+			if (robots[f].state == "dead"){
+				continue;
+			}
+			for (k=1+f; k<robots.length;k+=1){
+				if (robots[k].state == "dead"){
+					continue;
+				}
+				if (doOverlap(robots[f].x, robots[f].x+fontSize, robots[k].x,
+						robots[k].x+fontSize, robots[f].y, robots[f].y+fontSize, 
+						robots[k].y, robots[k].y+fontSize)==true){
+					
+					if ((robots[f].state == "junk") || (robots[k].state == "junk")){
+						robotsLeft -=1;
+						if (robots[k].state == "alive")
+							robots[k].state = "dead";
+						else
+							robots[f].state = "dead";
+						user_points+=100;
+					} else {
+						robotsLeft-=2;
+						robots[f].state = "junk";
+						robots[k].state = "dead";
+						user_points+=200;
+					}
+					death.src = "robot_death.mp3";
+				}
+			}
+		}
+	}
+	function checkGame(){
+		for (k=0; k<robots.length; k+=1){
+			if (robots[k].state == "alive"){
+				if (doOverlap(robots[k].x,robots[k].x+fontSize,user.x,user.x+fontSize,robots[k].y,robots[k].y+fontSize,user.y,user.y+fontSize)){
+					endGame();
+					alert(document.getElementById("debug").innerText);
+					alert(document.getElementById("dbg").innerText);
+					document.getElementById("dbg").innerText = "GAME OVER";
+					document.getElementById("debug").innerText = "GAME OVER";
+					document.getElementById("tele").innerText = "GAME OVER";
+					teleportCount = 0					
+					alert("Game Over");
+					draw.fillStyle = "black";
+					fontSize = 100;
+					draw.font = fontSize+"px Arial";
+					draw.fillText("GAME OVER", pixelw/5, pixelh/2);
+				}
+			}	
+		}
+	}
+
+	function meMove(xchange, ychange) {
+		if (!((user.x<fontSize && xchange==-1)||(user.y>(pixelh-fontSize) && ychange==1)||(user.x>(pixelw-fontSize) && xchange==1)||(user.y<fontSize && ychange==-1))){
+			var myx = user.x + (xchange * (fontSize/2));
+			var myy = user.y + (ychange * (fontSize/2));
+			var canmove = true;
+			for (x = 0; canmove && (x < robots.length); x++) {
+				if (doOverlap(myx, myx+fontSize, robots[x].x+5, robots[x].x+fontSize-5, myy, myy+fontSize, robots[x].y+5, robots[x].y+fontSize-5))
+					canmove = false;
+			}
+			if (canmove) {
+				user.x = myx;
+				user.y = myy;
+			}
+		}	
+		robotMove();
+		checkRobots();
+		drawScreen();
+		checkGame();
+		gameEnd();
+	}
+	function robotMove(){
+		for (m = 0; m<(robots.length); m++){
+				if (robots[m].state == "alive"){
+					if (user.x>robots[m].x){
+						robots[m].x+=fontSize/2;
+					} else if (user.x<robots[m].x){
+						robots[m].x-=fontSize/2;
+					}
+					if (user.y>robots[m].y){
+						robots[m].y+=fontSize/2;
+					} else if (user.y<robots[m].y){
+						robots[m].y-=fontSize/2;
+					}
+				}
+			}
+		}
+	function keypressed(event) {
+		switch(event.which) {
+			case 37:
+				meMove(-1,0);
+				break;
+			case 38:
+				meMove(0,-1);
+				break;
+			case 39:
+				meMove(1,0);
+				break;
+			case 40:
+				meMove(0,1);
+				break;
+			case 84:
+			if (teleportCount != 0){
+				teleport();
+				break;
+			}	
+		}
+	}
+	</script>
+</head>
+<body onload = "initialize()" onkeydown="keypressed(event)">
+	<audio id = "anoying"  onended = "songPick()" autoplay>
+	</audio>
+	<audio id = "death" autoplay>
+	</audio>
+	<script type="text/javascript">
+		songPick();
+	</script>
+	<canvas id = "robot" width = "1000" height = "590" style = "border:1px solid black;">
+	</canvas>
+	<table style="width:100%">
+  <tr>
+    <td><div id="debug"></div></td>
+    <td><div id="dbg"></div></td> 
+    <td><div id="tele"></div></td>
+  </tr>
+  <tr>
+    <td><button id = "muter" onclick =  "muteNoise()">Mute this background noise</button></td>
+    <td><button id = "helper" onclick = "instructions()">How to Play</button></td>
+    <td><button id = "next" onclick = "songPick()">Skip Song</button></td>
+  </tr>
+</table>
+</body>
+</html>
