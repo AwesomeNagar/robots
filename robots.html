@@ -24,6 +24,7 @@
 	var draw = null;
 	var teleportCount = 5;
 	var robotsLeft = total_robots;
+	var gameover = false;
 
 	function endGame(){
 		draw.fillStyle = "white";
@@ -150,23 +151,29 @@
 					document.getElementById("dbg").innerText = "GAME OVER";
 					document.getElementById("debug").innerText = "GAME OVER";
 					document.getElementById("tele").innerText = "GAME OVER";
+					gameover = true;
 					teleportCount = 0					
 					alert("Game Over");
 					draw.fillStyle = "black";
 					fontSize = 100;
 					draw.font = fontSize+"px Arial";
 					draw.fillText("GAME OVER", pixelw/5, pixelh/2);
+					return true;
 				}
 			}	
 		}
+		return false;
 	}
 
 	function meMove(xchange, ychange) {
+		if (gameover){
+			return;
+		}
 		if (!((user.x<fontSize && xchange==-1)||(user.y>(pixelh-fontSize) && ychange==1)||(user.x>(pixelw-fontSize) && xchange==1)||(user.y<fontSize && ychange==-1))){
 			var myx = user.x + (xchange * (fontSize/2));
 			var myy = user.y + (ychange * (fontSize/2));
 			var canmove = true;
-			for (x = 0; canmove && (x < robots.length); x++) {
+			for (x = 0; ((canmove==true) && (x < robots.length)); x++) {
 				if (doOverlap(myx, myx+fontSize, robots[x].x+5, robots[x].x+fontSize-5, myy, myy+fontSize, robots[x].y+5, robots[x].y+fontSize-5))
 					canmove = false;
 			}
@@ -176,11 +183,13 @@
 			}
 		}	
 		robotMove();
-		checkRobots();
-		drawScreen();
-		checkGame();
-		gameEnd();
-	}
+		if (!checkGame())
+		{
+			checkRobots();
+			drawScreen();
+			gameEnd();
+		}
+}
 	function robotMove(){
 		for (m = 0; m<(robots.length); m++){
 				if (robots[m].state == "alive"){
